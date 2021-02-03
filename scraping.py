@@ -11,13 +11,16 @@ def scrape_all():
     # Initiate headless driver for deployment
     browser = Browser("chrome", executable_path="chromedriver", headless=True)
     news_title, news_paragraph = mars_news(browser)
+    hemisphere_image_urls=hemisphere(browser)
+    
     # Run all scraping functions and store results in a dictionary
     data = {
         "news_title": news_title,
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        "hemispheres": hemisphere_image_urls
     }
     # Stop webdriver and return data
     browser.quit()
@@ -89,3 +92,23 @@ if __name__ == "__main__":
 
     # If running as script, print scraped data
     print(scrape_all())
+
+def hemisphere(browser):
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+    
+    hemisphere_image_urls = []
+    imgs_links= browser.find_by_css("a.product-item h3")
+    
+    for x in range(len(imgs_links)):
+        
+        hemisphere={}
+        browser.find_by_css("a.product-item h3")[x].click()
+        sample_img= browser.links.find_by_text("Sample").first
+        hemisphere['img_url']=sample_img['href']
+        hemisphere['title']=browser.find_by_css("h2.title").text
+        hemisphere_image_urls.append(hemisphere)
+        browser.back()
+    
+    return hemisphere_image_urls
+
